@@ -37,14 +37,14 @@ library(CPC)
 
 #define necessary settings
 
-setwd("/Users/IsaacMehlhaff/Desktop/Projects/CPC")
+setwd(") #set to whatever directory contains data files
 theme_set(theme_bw(base_size = 22))
 cores <- detectCores()
 
 #import data
 
-nominate <- as.data.frame(read_csv("Data/HSall_members.csv"))
-inequality <- as.data.frame(read_csv("Data/inequality.csv"))
+nominate <- as.data.frame(read_csv("HSall_members.csv"))
+inequality <- as.data.frame(read_csv("inequality.csv"))
 
 ###################################################################################
 #functions
