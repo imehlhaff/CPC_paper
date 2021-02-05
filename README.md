@@ -1,4 +1,4 @@
-## Replication Data and Code for "Measuring Political Polarization: The Cluster-Polarization Coefficient"
+## Replication Data and Code for "Measuring Polarization with Clustering Methods"
 
 # Usage
 
