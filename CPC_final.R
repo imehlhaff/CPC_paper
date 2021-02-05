@@ -32,7 +32,7 @@ library(animation)
 library(tidyverse)
 library(devtools)
 
-install_github("imehlhaff/CPC@main")
+install_github("imehlhaff/CPC")
 library(CPC)
 
 #define necessary settings
