@@ -12,7 +12,7 @@ Note that the Monte Carlo simulations are meant to be run together and in the or
 
 To cite this code in publications and working papers, please use:
 
-Mehlhaff, Isaac D. "Measuring Political Polarization: The Cluster-Polarization Coefficient," working paper (January 2021).
+Mehlhaff, Isaac D. "Measuring Political Polarization: The Cluster-Polarization Coefficient," working paper (February 2021).
 
 For BibTeX users:
 
@@ -20,7 +20,7 @@ For BibTeX users:
 @unpublished{Mehlhaff2021,
   title = {Measuring {{Political Polarization}}}: {{The Cluster}}-{{Polarization Coefficient}}},
   author = {Mehlhaff, Isaac D.},
-  date = {2021-01},
+  date = {2021-02},
   location = {{The University of North Carolina at Chapel Hill}}
 }
 ```
