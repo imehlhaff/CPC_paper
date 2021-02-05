@@ -1,4 +1,4 @@
-#Measuring Political Polarization: The Cluster-Polarization Coefficient
+#Measuring Polarization with Clustering Methods
 #Isaac D. Mehlhaff
 #February 2021
 ###################################################################################
