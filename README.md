@@ -28,4 +28,5 @@ For BibTeX users:
 To cite this data in publications and working papers, please refer to the relevant data owners:
 
 Chartbook of Economic Inequality: https://www.chartbookofeconomicinequality.com
+
 DW-NOMINATE: https://voteview.com
