@@ -2,7 +2,7 @@
 
 # Usage
 
-This repository contains the data and code necessary to replicate all results in both the main text and supplementary information of "Measuring Political Polarization: The Cluster-Polarization Coefficient," Isaac D. Mehlhaff (February 2021).
+This repository contains the data and code necessary to replicate all results in both the main text and supplementary information of "Measuring Polarization with Clustering Methods," Isaac D. Mehlhaff (February 2021).
 
 After downloading or cloning the repository to a local destination, ensure the working directory in the .R script is set to whatever directory contains the data files. Then, run the script. The .R script is meant to be run from top to bottom and will produce, over the course of the script, every figure reported in the main text and supplementary information as well as the information to fill in the table reported in the main text. Code chunks which produce figures and tables are commented as such.
 
@@ -12,16 +12,17 @@ Note that the Monte Carlo simulations are meant to be run together and in the or
 
 To cite this code in publications and working papers, please use:
 
-Mehlhaff, Isaac D. "Measuring Political Polarization: The Cluster-Polarization Coefficient," working paper (February 2021).
+Mehlhaff, Isaac D. "Measuring Polarization with Clustering Methods," working paper (February 2021).
 
 For BibTeX users:
 
 ```
-@unpublished{Mehlhaff2021,
-  title = {Measuring {{Political Polarization}}}: {{The Cluster}}-{{Polarization Coefficient}}},
+@unpublished{Mehlhaff2021b,
+  title = {Measuring {{Polarization}} with {{Clustering Methods}}},
   author = {Mehlhaff, Isaac D.},
-  date = {2021-02},
-  location = {{The University of North Carolina at Chapel Hill}}
+  year = {2021},
+  month = feb,
+  address = {{The University of North Carolina at Chapel Hill}}
 }
 ```
 
