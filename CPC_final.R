@@ -37,7 +37,7 @@ library(CPC)
 
 #define necessary settings
 
-setwd(") #set to whatever directory contains data files
+setwd() #set to whatever directory contains data files
 theme_set(theme_bw(base_size = 22))
 cores <- detectCores()
 
@@ -945,9 +945,17 @@ MC_uni_ranmean_plot <- rbind(MC_uni_ranmean1, MC_uni_ranmean2, MC_uni_ranmean3,
 #tidy data and create labels for plotting
 
 MC_uni_ranvar_plot <- pivot_longer(MC_uni_ranvar_plot, cols = 2:5,
-                                   names_to = "measure", values_to = "value")
+                                   names_to = "measure", values_to = "value") %>%
+  mutate(measure = ifelse(measure == "difference", "Difference",
+                          ifelse(measure == "variance", "Variance",
+                                 ifelse(measure == "kurtosis", "Kurtosis",
+                                        measure))))
 MC_uni_ranmean_plot <- pivot_longer(MC_uni_ranmean_plot, cols = 2:5,
-                                    names_to = "measure", values_to = "value")
+                                    names_to = "measure", values_to = "value") %>%
+  mutate(measure = ifelse(measure == "difference", "Difference",
+                          ifelse(measure == "variance", "Variance",
+                                 ifelse(measure == "kurtosis", "Kurtosis",
+                                        measure))))
 
 MC_uni_ranvar_plot$mean_label <- factor(MC_uni_ranvar_plot$mean_label,
                                         levels = c("means = (-2, 2)",
@@ -959,11 +967,15 @@ MC_uni_ranmean_plot$variance_label <- factor(MC_uni_ranmean_plot$variance_label,
                                                         "sd = 1", "sd = 0.5"))
 
 MC_uni_ranvar_plot$measure <- factor(MC_uni_ranvar_plot$measure,
-                                     levels = c("difference", "variance",
-                                                "kurtosis", "CPC"))
+                                     levels = c("Difference", "Variance",
+                                                "Kurtosis", "CPC"))
 MC_uni_ranmean_plot$measure <- factor(MC_uni_ranmean_plot$measure,
-                                      levels = c("difference", "variance",
-                                                 "kurtosis", "CPC"))
+                                      levels = c("Difference", "Variance",
+                                                 "Kurtosis", "CPC"))
+
+#set temporary base size for plots
+
+theme_set(theme_bw(base_size = 25))
 
 #plot results of univariate Monte Carlo simulations (Figure 3)
 
@@ -980,6 +992,10 @@ ggplot(MC_uni_ranmean_plot, aes(x = rank_true)) +
   ylab("Estimated Polarization Rank") +
   facet_grid(measure ~ variance_label) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+#reset base size
+
+theme_set(theme_bw(base_size = 22))
 
 ###################################################################################
 #Monte Carlo simulations for bivariate distributions (2 clusters)
@@ -1235,9 +1251,17 @@ MC_bi_ranmean_plot <- rbind(MC_bi_ranmean1, MC_bi_ranmean2, MC_bi_ranmean3,
 #tidy data and create labels for plotting
 
 MC_bi_ranvar_plot <- pivot_longer(MC_bi_ranvar_plot, cols = 2:5,
-                                  names_to = "measure", values_to = "value")
+                                  names_to = "measure", values_to = "value") %>%
+  mutate(measure = ifelse(measure == "difference", "Difference",
+                          ifelse(measure == "variance", "Variance",
+                                 ifelse(measure == "kurtosis", "Kurtosis",
+                                        measure))))
 MC_bi_ranmean_plot <- pivot_longer(MC_bi_ranmean_plot, cols = 2:5,
-                                   names_to = "measure", values_to = "value")
+                                   names_to = "measure", values_to = "value") %>%
+  mutate(measure = ifelse(measure == "difference", "Difference",
+                          ifelse(measure == "variance", "Variance",
+                                 ifelse(measure == "kurtosis", "Kurtosis",
+                                        measure))))
 
 MC_bi_ranvar_plot$mean_label <- factor(MC_bi_ranvar_plot$mean_label,
                                        levels = c("means = (-2, 2)",
@@ -1248,11 +1272,15 @@ MC_bi_ranmean_plot$variance_label <- factor(MC_bi_ranmean_plot$variance_label,
                                             levels = c("sd = 2", "sd = 1.5",
                                                        "sd = 1", "sd = 0.5"))
 MC_bi_ranvar_plot$measure <- factor(MC_bi_ranvar_plot$measure,
-                                    levels = c("difference", "variance", "kurtosis",
+                                    levels = c("Difference", "Variance", "Kurtosis",
                                                "CPC"))
 MC_bi_ranmean_plot$measure <- factor(MC_bi_ranmean_plot$measure,
-                                     levels = c("difference", "variance",
-                                                "kurtosis", "CPC"))
+                                     levels = c("Difference", "Variance",
+                                                "Kurtosis", "CPC"))
+
+#set temporary base size for plots
+
+theme_set(theme_bw(base_size = 25))
 
 #plot results of bivariate Monte Carlo simulations (Figure 4)
 
@@ -1269,6 +1297,10 @@ ggplot(MC_bi_ranmean_plot, aes(x = rank_true)) +
   ylab("Estimated Polarization Rank") +
   facet_grid(measure ~ variance_label) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+#reset base size
+
+theme_set(theme_bw(base_size = 22))
 
 ###################################################################################
 #Monte Carlo simulations for univariate distributions (3 clusters)
@@ -1516,9 +1548,17 @@ MC3_uni_ranmean_plot <- rbind(MC3_uni_ranmean1, MC3_uni_ranmean2, MC3_uni_ranmea
 #tidy data and create labels for plotting
 
 MC3_uni_ranvar_plot <- pivot_longer(MC3_uni_ranvar_plot, cols = 2:5,
-                                    names_to = "measure", values_to = "value")
+                                    names_to = "measure", values_to = "value") %>%
+  mutate(measure = ifelse(measure == "difference", "Difference",
+                          ifelse(measure == "variance", "Variance",
+                                 ifelse(measure == "kurtosis", "Kurtosis",
+                                        measure))))
 MC3_uni_ranmean_plot <- pivot_longer(MC3_uni_ranmean_plot, cols = 2:5,
-                                     names_to = "measure", values_to = "value")
+                                     names_to = "measure", values_to = "value") %>%
+  mutate(measure = ifelse(measure == "difference", "Difference",
+                          ifelse(measure == "variance", "Variance",
+                                 ifelse(measure == "kurtosis", "Kurtosis",
+                                        measure))))
 
 MC3_uni_ranvar_plot$mean_label <- factor(MC3_uni_ranvar_plot$mean_label,
                                          levels = c("means = (-2, 2)",
@@ -1530,11 +1570,15 @@ MC3_uni_ranmean_plot$variance_label <- factor(MC3_uni_ranmean_plot$variance_labe
                                                          "sd = 1", "sd = 0.5"))
 
 MC3_uni_ranvar_plot$measure <- factor(MC3_uni_ranvar_plot$measure,
-                                      levels = c("difference", "variance",
-                                                 "kurtosis", "CPC"))
+                                      levels = c("Difference", "Variance",
+                                                 "Kurtosis", "CPC"))
 MC3_uni_ranmean_plot$measure <- factor(MC3_uni_ranmean_plot$measure,
-                                       levels = c("difference", "variance",
-                                                  "kurtosis", "CPC"))
+                                       levels = c("Difference", "Variance",
+                                                  "Kurtosis", "CPC"))
+
+#set temporary base size for plots
+
+theme_set(theme_bw(base_size = 25))
 
 #plot results of univariate Monte Carlo simulations (Figure S7)
 
@@ -1551,6 +1595,10 @@ ggplot(MC3_uni_ranmean_plot, aes(x = rank_true)) +
   ylab("Estimated Polarization Rank") +
   facet_grid(measure ~ variance_label) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+#reset base size
+
+theme_set(theme_bw(base_size = 22))
 
 ###################################################################################
 #Monte Carlo simulations for bivariate distributions (3 clusters)
@@ -1809,9 +1857,17 @@ MC3_bi_ranmean_plot <- rbind(MC3_bi_ranmean1, MC3_bi_ranmean2, MC3_bi_ranmean3,
 #tidy data and create labels for plotting
 
 MC3_bi_ranvar_plot <- pivot_longer(MC3_bi_ranvar_plot, cols = 2:5,
-                                   names_to = "measure", values_to = "value")
+                                   names_to = "measure", values_to = "value") %>%
+  mutate(measure = ifelse(measure == "difference", "Difference",
+                          ifelse(measure == "variance", "Variance",
+                                 ifelse(measure == "kurtosis", "Kurtosis",
+                                        measure))))
 MC3_bi_ranmean_plot <- pivot_longer(MC3_bi_ranmean_plot, cols = 2:5,
-                                    names_to = "measure", values_to = "value")
+                                    names_to = "measure", values_to = "value") %>%
+  mutate(measure = ifelse(measure == "difference", "Difference",
+                          ifelse(measure == "variance", "Variance",
+                                 ifelse(measure == "kurtosis", "Kurtosis",
+                                        measure))))
 
 MC3_bi_ranvar_plot$mean_label <- factor(MC3_bi_ranvar_plot$mean_label,
                                         levels = c("means = (-2, 2)",
@@ -1822,11 +1878,15 @@ MC3_bi_ranmean_plot$variance_label <- factor(MC3_bi_ranmean_plot$variance_label,
                                              levels = c("sd = 2", "sd = 1.5",
                                                         "sd = 1", "sd = 0.5"))
 MC3_bi_ranvar_plot$measure <- factor(MC3_bi_ranvar_plot$measure,
-                                     levels = c("difference", "variance",
-                                                "kurtosis", "CPC"))
+                                     levels = c("Difference", "Variance",
+                                                "Kurtosis", "CPC"))
 MC3_bi_ranmean_plot$measure <- factor(MC3_bi_ranmean_plot$measure,
-                                      levels = c("difference", "variance",
-                                                 "kurtosis", "CPC"))
+                                      levels = c("Difference", "Variance",
+                                                 "Kurtosis", "CPC"))
+
+#set temporary base size for plots
+
+theme_set(theme_bw(base_size = 25))
 
 #plot results of bivariate Monte Carlo simulations (Figure S8)
 
@@ -1843,6 +1903,10 @@ ggplot(MC3_bi_ranmean_plot, aes(x = rank_true)) +
   ylab("Estimated Polarization Rank") +
   facet_grid(measure ~ variance_label) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+#reset base size
+
+theme_set(theme_bw(base_size = 22))
 
 ###################################################################################
 #Monte Carlo simulations for univariate distributions (4 clusters)
@@ -2092,9 +2156,17 @@ MC4_uni_ranmean_plot <- rbind(MC4_uni_ranmean1, MC4_uni_ranmean2, MC4_uni_ranmea
 #tidy data and create labels for plotting
 
 MC4_uni_ranvar_plot <- pivot_longer(MC4_uni_ranvar_plot, cols = 2:5,
-                                    names_to = "measure", values_to = "value")
+                                    names_to = "measure", values_to = "value") %>%
+  mutate(measure = ifelse(measure == "difference", "Difference",
+                          ifelse(measure == "variance", "Variance",
+                                 ifelse(measure == "kurtosis", "Kurtosis",
+                                        measure))))
 MC4_uni_ranmean_plot <- pivot_longer(MC4_uni_ranmean_plot, cols = 2:5,
-                                     names_to = "measure", values_to = "value")
+                                     names_to = "measure", values_to = "value") %>%
+  mutate(measure = ifelse(measure == "difference", "Difference",
+                          ifelse(measure == "variance", "Variance",
+                                 ifelse(measure == "kurtosis", "Kurtosis",
+                                        measure))))
 
 MC4_uni_ranvar_plot$mean_label <- factor(MC4_uni_ranvar_plot$mean_label,
                                          levels = c("means = (-2, 2)",
@@ -2106,11 +2178,15 @@ MC4_uni_ranmean_plot$variance_label <- factor(MC4_uni_ranmean_plot$variance_labe
                                                          "sd = 1", "sd = 0.5"))
 
 MC4_uni_ranvar_plot$measure <- factor(MC4_uni_ranvar_plot$measure,
-                                      levels = c("difference", "variance",
-                                                 "kurtosis", "CPC"))
+                                      levels = c("Difference", "Variance",
+                                                 "Kurtosis", "CPC"))
 MC4_uni_ranmean_plot$measure <- factor(MC4_uni_ranmean_plot$measure,
-                                       levels = c("difference", "variance",
-                                                  "kurtosis", "CPC"))
+                                       levels = c("Difference", "Variance",
+                                                  "Kurtosis", "CPC"))
+
+#set temporary base size for plots
+
+theme_set(theme_bw(base_size = 25))
 
 #plot results of univariate Monte Carlo simulations (Figure S11)
 
@@ -2127,6 +2203,10 @@ ggplot(MC4_uni_ranmean_plot, aes(x = rank_true)) +
   ylab("Estimated Polarization Rank") +
   facet_grid(measure ~ variance_label) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+#reset base size
+
+theme_set(theme_bw(base_size = 22))
 
 ###################################################################################
 #Monte Carlo simulations for bivariate distributions (4 clusters)
@@ -2387,9 +2467,17 @@ MC4_bi_ranmean_plot <- rbind(MC4_bi_ranmean1, MC4_bi_ranmean2, MC4_bi_ranmean3,
 #tidy data and create labels for plotting
 
 MC4_bi_ranvar_plot <- pivot_longer(MC4_bi_ranvar_plot, cols = 2:5,
-                                   names_to = "measure", values_to = "value")
+                                   names_to = "measure", values_to = "value") %>%
+  mutate(measure = ifelse(measure == "difference", "Difference",
+                          ifelse(measure == "variance", "Variance",
+                                 ifelse(measure == "kurtosis", "Kurtosis",
+                                        measure))))
 MC4_bi_ranmean_plot <- pivot_longer(MC4_bi_ranmean_plot, cols = 2:5,
-                                    names_to = "measure", values_to = "value")
+                                    names_to = "measure", values_to = "value") %>%
+  mutate(measure = ifelse(measure == "difference", "Difference",
+                          ifelse(measure == "variance", "Variance",
+                                 ifelse(measure == "kurtosis", "Kurtosis",
+                                        measure))))
 
 MC4_bi_ranvar_plot$mean_label <- factor(MC4_bi_ranvar_plot$mean_label,
                                         levels = c("means = (-2, 2)",
@@ -2400,11 +2488,15 @@ MC4_bi_ranmean_plot$variance_label <- factor(MC4_bi_ranmean_plot$variance_label,
                                              levels = c("sd = 2", "sd = 1.5",
                                                         "sd = 1", "sd = 0.5"))
 MC4_bi_ranvar_plot$measure <- factor(MC4_bi_ranvar_plot$measure,
-                                     levels = c("difference", "variance",
-                                                "kurtosis", "CPC"))
+                                     levels = c("Difference", "Variance",
+                                                "Kurtosis", "CPC"))
 MC4_bi_ranmean_plot$measure <- factor(MC4_bi_ranmean_plot$measure,
-                                      levels = c("difference", "variance",
-                                                 "kurtosis", "CPC"))
+                                      levels = c("Difference", "Variance",
+                                                 "Kurtosis", "CPC"))
+
+#set temporary base size for plots
+
+theme_set(theme_bw(base_size = 25))
 
 #plot results of bivariate Monte Carlo simulations (Figure S12)
 
@@ -2421,6 +2513,10 @@ ggplot(MC4_bi_ranmean_plot, aes(x = rank_true)) +
   ylab("Estimated Polarization Rank") +
   facet_grid(measure ~ variance_label) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+#reset base size
+
+theme_set(theme_bw(base_size = 22))
 
 ###################################################################################
 #RMSE and MAE
