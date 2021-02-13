@@ -7,9 +7,9 @@
 
 #install and load necessary packages
 
-packages <- c("haven", "labelled", "pbapply", "parallel", "mixtools", "Metrics",
-              "gdata", "psych", "cluster", "data.table", "GGally", "MASS",
-              "animation", "tidyverse", "devtools")
+packages <- c("haven", "labelled", "pbapply", "parallel", "doParallel", "mixtools",
+              "Metrics", "gdata", "psych", "cluster", "data.table", "GGally",
+              "MASS", "animation", "tidyverse", "devtools")
 
 for (i in packages) {
   ifelse(i %in% installed.packages(), print("Package already installed"),
@@ -20,6 +20,7 @@ library(haven)
 library(labelled)
 library(pbapply)
 library(parallel)
+library(doParallel)
 library(mixtools)
 library(Metrics)
 library(gdata)
@@ -40,6 +41,7 @@ library(CPC)
 setwd() #set to whatever directory contains data files
 theme_set(theme_bw(base_size = 22))
 cores <- detectCores()
+sets <- 100
 
 #import data
 
@@ -212,49 +214,150 @@ inequality <- mutate(inequality,
 #calculation of polarization estimates
 ###################################################################################
 
+#set seed
+
+set.seed(456)
+
+#bootstrap data sets
+
+registerDoParallel(cores = cores)
+
+house_boot <- foreach(i = 1:sets) %dopar% {
+  data <- sample_n(tbl = nom_house, size = nrow(nom_house), replace = TRUE)
+  return(data)
+}
+
+senate_boot <- foreach(i = 1:sets) %dopar% {
+  data <- sample_n(tbl = nom_senate, size = nrow(nom_senate), replace = TRUE)
+  return(data)
+}
+
+stopImplicitCluster()
+
 #calculate polarization estimates for each chamber using three measures and scale measures for presentation on same plot
 
-house_polarization <- group_by(nom_house, congress) %>%
-  dplyr::summarize(nom_diff = diff.uni(nominate_dim1, y = 1, k = 2),
-                   nom_var = var(nominate_dim1, na.rm = TRUE),
-                   nom_kurt = -(kurtosi(nominate_dim1, na.rm = TRUE)),
-                   nom_CPC = CPC(nominate_dim1, 2, "kmeans", adjust = TRUE,
-                                 nstart = 30),
-                   np_diff = diff.uni(nokken_poole_dim1, y = 1, k = 2),
-                   np_var = var(nokken_poole_dim1, na.rm = TRUE),
-                   np_kurt = -(kurtosi(nokken_poole_dim1, na.rm = TRUE)),
-                   np_CPC = CPC(nokken_poole_dim1, 2, "kmeans", adjust = TRUE,
-                                nstart = 30)) %>%
-  mutate(nom_diff_scale = scales::rescale(nom_diff, to = c(0, 1)),
-         nom_var_scale = scales::rescale(nom_var, to = c(0, 1)),
-         nom_kurt_scale = scales::rescale(nom_kurt, to = c(0, 1)),
-         nom_CPC_scale = scales::rescale(nom_CPC, to = c(0, 1)),
-         np_diff_scale = scales::rescale(np_diff, to = c(0, 1)),
-         np_var_scale = scales::rescale(np_var, to = c(0, 1)),
-         np_kurt_scale = scales::rescale(np_kurt, to = c(0, 1)),
-         np_CPC_scale = scales::rescale(np_CPC, to = c(0, 1)),
-         chamber = "House of Representatives")
+house_list <- pblapply(house_boot, function(x){
+  house_polarization <- group_by(x, congress) %>%
+    dplyr::summarize(nom_diff = diff.uni(nominate_dim1, y = 1, k = 2),
+                     nom_var = var(nominate_dim1, na.rm = TRUE),
+                     nom_kurt = -(kurtosi(nominate_dim1, na.rm = TRUE)),
+                     nom_CPC = CPC(nominate_dim1, 2, "kmeans", adjust = TRUE,
+                                   nstart = 30),
+                     np_diff = diff.uni(nokken_poole_dim1, y = 1, k = 2),
+                     np_var = var(nokken_poole_dim1, na.rm = TRUE),
+                     np_kurt = -(kurtosi(nokken_poole_dim1, na.rm = TRUE)),
+                     np_CPC = CPC(nokken_poole_dim1, 2, "kmeans", adjust = TRUE,
+                                  nstart = 30)) %>%
+    mutate(nom_diff_scale = scales::rescale(nom_diff, to = c(0, 1)),
+           nom_var_scale = scales::rescale(nom_var, to = c(0, 1)),
+           nom_kurt_scale = scales::rescale(nom_kurt, to = c(0, 1)),
+           nom_CPC_scale = scales::rescale(nom_CPC, to = c(0, 1)),
+           np_diff_scale = scales::rescale(np_diff, to = c(0, 1)),
+           np_var_scale = scales::rescale(np_var, to = c(0, 1)),
+           np_kurt_scale = scales::rescale(np_kurt, to = c(0, 1)),
+           np_CPC_scale = scales::rescale(np_CPC, to = c(0, 1)))
+},
+cl = cores)
 
-senate_polarization <- group_by(nom_senate, congress) %>%
-  dplyr::summarize(nom_diff = diff.uni(nominate_dim1, y = 1, k = 2),
-                   nom_var = var(nominate_dim1, na.rm = TRUE),
-                   nom_kurt = -(kurtosi(nominate_dim1, na.rm = TRUE)),
-                   nom_CPC = CPC(nominate_dim1, 2, "kmeans", adjust = TRUE,
-                                 nstart = 30),
-                   np_diff = diff.uni(nokken_poole_dim1, y = 1, k = 2),
-                   np_var = var(nokken_poole_dim1, na.rm = TRUE),
-                   np_kurt = -(kurtosi(nokken_poole_dim1, na.rm = TRUE)),
-                   np_CPC = CPC(nokken_poole_dim1, 2, "kmeans", adjust = TRUE,
-                                nstart = 30)) %>%
-  mutate(nom_diff_scale = scales::rescale(nom_diff, to = c(0, 1)),
-         nom_var_scale = scales::rescale(nom_var, to = c(0, 1)),
-         nom_kurt_scale = scales::rescale(nom_kurt, to = c(0, 1)),
-         nom_CPC_scale = scales::rescale(nom_CPC, to = c(0, 1)),
-         np_diff_scale = scales::rescale(np_diff, to = c(0, 1)),
-         np_var_scale = scales::rescale(np_var, to = c(0, 1)),
-         np_kurt_scale = scales::rescale(np_kurt, to = c(0, 1)),
-         np_CPC_scale = scales::rescale(np_CPC, to = c(0, 1)),
-         chamber = "Senate")
+senate_list <- pblapply(senate_boot, function(x){
+  senate_polarization <- group_by(x, congress) %>%
+    dplyr::summarize(nom_diff = diff.uni(nominate_dim1, y = 1, k = 2),
+                     nom_var = var(nominate_dim1, na.rm = TRUE),
+                     nom_kurt = -(kurtosi(nominate_dim1, na.rm = TRUE)),
+                     nom_CPC = CPC(nominate_dim1, 2, "kmeans", adjust = TRUE,
+                                   nstart = 30),
+                     np_diff = diff.uni(nokken_poole_dim1, y = 1, k = 2),
+                     np_var = var(nokken_poole_dim1, na.rm = TRUE),
+                     np_kurt = -(kurtosi(nokken_poole_dim1, na.rm = TRUE)),
+                     np_CPC = CPC(nokken_poole_dim1, 2, "kmeans", adjust = TRUE,
+                                  nstart = 30)) %>%
+    mutate(nom_diff_scale = scales::rescale(nom_diff, to = c(0, 1)),
+           nom_var_scale = scales::rescale(nom_var, to = c(0, 1)),
+           nom_kurt_scale = scales::rescale(nom_kurt, to = c(0, 1)),
+           nom_CPC_scale = scales::rescale(nom_CPC, to = c(0, 1)),
+           np_diff_scale = scales::rescale(np_diff, to = c(0, 1)),
+           np_var_scale = scales::rescale(np_var, to = c(0, 1)),
+           np_kurt_scale = scales::rescale(np_kurt, to = c(0, 1)),
+           np_CPC_scale = scales::rescale(np_CPC, to = c(0, 1)))
+},
+cl = cores)
+
+#collapse lists into single data frames
+
+house_collapse <- Reduce(function(x, y) bind_rows(x, y), house_list)
+senate_collapse <- Reduce(function(x, y) bind_rows(x, y), senate_list)
+
+#calculate mean and standard error of bootstrapped polarization estimates
+
+house_polarization <- group_by(house_collapse, congress) %>%
+  dplyr::summarize(nom_diff_mean = mean(nom_diff, na.rm = TRUE),
+                   nom_var_mean = mean(nom_var, na.rm = TRUE),
+                   nom_kurt_mean = mean(nom_kurt, na.rm = TRUE),
+                   nom_CPC_mean = mean(nom_CPC, na.rm = TRUE),
+                   np_diff_mean = mean(np_diff, na.rm = TRUE),
+                   np_var_mean = mean(np_var, na.rm = TRUE),
+                   np_kurt_mean = mean(np_kurt, na.rm = TRUE),
+                   np_CPC_mean = mean(np_CPC, na.rm = TRUE),
+                   nom_diff_scale_mean = mean(nom_diff_scale, na.rm = TRUE),
+                   nom_var_scale_mean = mean(nom_var_scale, na.rm = TRUE),
+                   nom_kurt_scale_mean = mean(nom_kurt_scale, na.rm = TRUE),
+                   nom_CPC_scale_mean = mean(nom_CPC_scale, na.rm = TRUE),
+                   np_diff_scale_mean = mean(np_diff_scale, na.rm = TRUE),
+                   np_var_scale_mean = mean(np_var_scale, na.rm = TRUE),
+                   np_kurt_scale_mean = mean(np_kurt_scale, na.rm = TRUE),
+                   np_CPC_scale_mean = mean(np_CPC_scale, na.rm = TRUE),
+                   nom_diff_se = sd(nom_diff, na.rm = TRUE),
+                   nom_var_se = sd(nom_var, na.rm = TRUE),
+                   nom_kurt_se = sd(nom_kurt, na.rm = TRUE),
+                   nom_CPC_se = sd(nom_CPC, na.rm = TRUE),
+                   np_diff_se = sd(np_diff, na.rm = TRUE),
+                   np_var_se = sd(np_var, na.rm = TRUE),
+                   np_kurt_se = sd(np_kurt, na.rm = TRUE),
+                   np_CPC_se = sd(np_CPC, na.rm = TRUE),
+                   nom_diff_scale_se = sd(nom_diff_scale, na.rm = TRUE),
+                   nom_var_scale_se = sd(nom_var_scale, na.rm = TRUE),
+                   nom_kurt_scale_se = sd(nom_kurt_scale, na.rm = TRUE),
+                   nom_CPC_scale_se = sd(nom_CPC_scale, na.rm = TRUE),
+                   np_diff_scale_se = sd(np_diff_scale, na.rm = TRUE),
+                   np_var_scale_se = sd(np_var_scale, na.rm = TRUE),
+                   np_kurt_scale_se = sd(np_kurt_scale, na.rm = TRUE),
+                   np_CPC_scale_se = sd(np_CPC_scale, na.rm = TRUE)) %>%
+  mutate(chamber = "House of Representatives")
+
+senate_polarization <- group_by(senate_collapse, congress) %>%
+  dplyr::summarize(nom_diff_mean = mean(nom_diff, na.rm = TRUE),
+                   nom_var_mean = mean(nom_var, na.rm = TRUE),
+                   nom_kurt_mean = mean(nom_kurt, na.rm = TRUE),
+                   nom_CPC_mean = mean(nom_CPC, na.rm = TRUE),
+                   np_diff_mean = mean(np_diff, na.rm = TRUE),
+                   np_var_mean = mean(np_var, na.rm = TRUE),
+                   np_kurt_mean = mean(np_kurt, na.rm = TRUE),
+                   np_CPC_mean = mean(np_CPC, na.rm = TRUE),
+                   nom_diff_scale_mean = mean(nom_diff_scale, na.rm = TRUE),
+                   nom_var_scale_mean = mean(nom_var_scale, na.rm = TRUE),
+                   nom_kurt_scale_mean = mean(nom_kurt_scale, na.rm = TRUE),
+                   nom_CPC_scale_mean = mean(nom_CPC_scale, na.rm = TRUE),
+                   np_diff_scale_mean = mean(np_diff_scale, na.rm = TRUE),
+                   np_var_scale_mean = mean(np_var_scale, na.rm = TRUE),
+                   np_kurt_scale_mean = mean(np_kurt_scale, na.rm = TRUE),
+                   np_CPC_scale_mean = mean(np_CPC_scale, na.rm = TRUE),
+                   nom_diff_se = sd(nom_diff, na.rm = TRUE),
+                   nom_var_se = sd(nom_var, na.rm = TRUE),
+                   nom_kurt_se = sd(nom_kurt, na.rm = TRUE),
+                   nom_CPC_se = sd(nom_CPC, na.rm = TRUE),
+                   np_diff_se = sd(np_diff, na.rm = TRUE),
+                   np_var_se = sd(np_var, na.rm = TRUE),
+                   np_kurt_se = sd(np_kurt, na.rm = TRUE),
+                   np_CPC_se = sd(np_CPC, na.rm = TRUE),
+                   nom_diff_scale_se = sd(nom_diff_scale, na.rm = TRUE),
+                   nom_var_scale_se = sd(nom_var_scale, na.rm = TRUE),
+                   nom_kurt_scale_se = sd(nom_kurt_scale, na.rm = TRUE),
+                   nom_CPC_scale_se = sd(nom_CPC_scale, na.rm = TRUE),
+                   np_diff_scale_se = sd(np_diff_scale, na.rm = TRUE),
+                   np_var_scale_se = sd(np_var_scale, na.rm = TRUE),
+                   np_kurt_scale_se = sd(np_kurt_scale, na.rm = TRUE),
+                   np_CPC_scale_se = sd(np_CPC_scale, na.rm = TRUE)) %>%
+  mutate(chamber = "Senate")
 
 #combine House and Senate polarization estimates into single data frame
 
@@ -266,51 +369,110 @@ nom_polarization <- rbind(house_polarization, senate_polarization)
 
 #divide polarization data frame by estimate type and mean/se, collapse measures into single column, and add column denoting estimate type
 
-nom <- dplyr::select(nom_polarization, congress, chamber, starts_with("nom")) %>%
-  pivot_longer(cols = c("nom_diff", "nom_var", "nom_kurt", "nom_CPC",
-                        "nom_diff_scale", "nom_var_scale", "nom_kurt_scale",
-                        "nom_CPC_scale"), names_to = "measure",
-               values_to = "value") %>%
+nom_mean <- dplyr::select(nom_polarization, congress, chamber,
+                          starts_with("nom")) %>%
+  dplyr::select(congress, chamber, ends_with("mean")) %>%
+  pivot_longer(cols = c("nom_diff_mean", "nom_var_mean", "nom_kurt_mean",
+                        "nom_CPC_mean", "nom_diff_scale_mean", "nom_var_scale_mean",
+                        "nom_kurt_scale_mean", "nom_CPC_scale_mean"),
+               names_to = "measure", values_to = "mean") %>%
   mutate(type = "NOMINATE",
          measure = substr(measure, 5, nchar(measure)),
-         scaled = ifelse(measure %in% c("diff_scale", "var_scale", "kurt_scale",
-                                        "CPC_scale"), 1, 0),
-         measure = ifelse(measure %in% c("diff", "diff_scale"), "difference",
-                          ifelse(measure %in% c("var", "var_scale"), "variance",
-                                 ifelse(measure %in% c("kurt", "kurt_scale"),
-                                        "kurtosis",
-                                        ifelse(measure %in% c("CPC", "CPC_scale"),
+         scaled = ifelse(measure %in% c("diff_scale_mean", "var_scale_mean",
+                                        "kurt_scale_mean", "CPC_scale_mean"), 1, 0),
+         measure = ifelse(measure %in% c("diff_mean", "diff_scale_mean"),
+                                         "Difference",
+                          ifelse(measure %in% c("var_mean", "var_scale_mean"),
+                                 "Variance",
+                                 ifelse(measure %in% c("kurt_mean",
+                                                       "kurt_scale_mean"),
+                                        "Kurtosis",
+                                        ifelse(measure %in% c("CPC_mean",
+                                                              "CPC_scale_mean"),
                                                "CPC", NA)))))
 
-np <- dplyr::select(nom_polarization, congress, chamber, starts_with("np")) %>%
-  pivot_longer(cols = c("np_diff", "np_var", "np_kurt", "np_CPC", "np_diff_scale",
-                        "np_var_scale", "np_kurt_scale", "np_CPC_scale"),
-               names_to = "measure", values_to = "value") %>%
+nom_se <- dplyr::select(nom_polarization, congress, chamber, starts_with("nom")) %>%
+  dplyr::select(congress, chamber, ends_with("se")) %>%
+  pivot_longer(cols = c("nom_diff_se", "nom_var_se", "nom_kurt_se", "nom_CPC_se",
+                        "nom_diff_scale_se", "nom_var_scale_se",
+                        "nom_kurt_scale_se", "nom_CPC_scale_se"),
+               names_to = "measure", values_to = "se") %>%
+  mutate(type = "NOMINATE",
+         measure = substr(measure, 5, nchar(measure)),
+         scaled = ifelse(measure %in% c("diff_scale_se", "var_scale_se",
+                                        "kurt_scale_se", "CPC_scale_se"), 1, 0),
+         measure = ifelse(measure %in% c("diff_se", "diff_scale_se"), "Difference",
+                          ifelse(measure %in% c("var_se", "var_scale_se"),
+                                 "Variance",
+                                 ifelse(measure %in% c("kurt_se", "kurt_scale_se"),
+                                        "Kurtosis",
+                                        ifelse(measure %in% c("CPC_se",
+                                                              "CPC_scale_se"),
+                                               "CPC", NA)))))
+
+np_mean <- dplyr::select(nom_polarization, congress, chamber, starts_with("np")) %>%
+  dplyr::select(congress, chamber, ends_with("mean")) %>%
+  pivot_longer(cols = c("np_diff_mean", "np_var_mean", "np_kurt_mean",
+                        "np_CPC_mean", "np_diff_scale_mean", "np_var_scale_mean",
+                        "np_kurt_scale_mean", "np_CPC_scale_mean"),
+               names_to = "measure", values_to = "mean") %>%
   mutate(type = "Nokken-Poole",
          measure = substr(measure, 4, nchar(measure)),
-         scaled = ifelse(measure %in% c("diff_scale", "var_scale", "kurt_scale",
-                                        "CPC_scale"), 1, 0),
-         measure = ifelse(measure %in% c("diff", "diff_scale"), "difference",
-                          ifelse(measure %in% c("var", "var_scale"), "variance",
-                                 ifelse(measure %in% c("kurt", "kurt_scale"),
-                                        "kurtosis",
-                                        ifelse(measure %in% c("CPC", "CPC_scale"),
+         scaled = ifelse(measure %in% c("diff_scale_mean", "var_scale_mean",
+                                        "kurt_scale_mean", "CPC_scale_mean"), 1, 0),
+         measure = ifelse(measure %in% c("diff_mean", "diff_scale_mean"),
+                          "Difference",
+                          ifelse(measure %in% c("var_mean", "var_scale_mean"),
+                                 "Variance",
+                                 ifelse(measure %in% c("kurt_mean",
+                                                       "kurt_scale_mean"),
+                                        "Kurtosis",
+                                        ifelse(measure %in% c("CPC_mean",
+                                                              "CPC_scale_mean"),
                                                "CPC", NA)))))
 
-#merge data frames back together and relevel faceting variables
+np_se <- dplyr::select(nom_polarization, congress, chamber, starts_with("np")) %>%
+  dplyr::select(congress, chamber, ends_with("se")) %>%
+  pivot_longer(cols = c("np_diff_se", "np_var_se", "np_kurt_se", "np_CPC_se",
+                        "np_diff_scale_se", "np_var_scale_se",
+                        "np_kurt_scale_se", "np_CPC_scale_se"),
+               names_to = "measure", values_to = "se") %>%
+  mutate(type = "Nokken-Poole",
+         measure = substr(measure, 4, nchar(measure)),
+         scaled = ifelse(measure %in% c("diff_scale_se", "var_scale_se",
+                                        "kurt_scale_se", "CPC_scale_se"), 1, 0),
+         measure = ifelse(measure %in% c("diff_se", "diff_scale_se"), "Difference",
+                          ifelse(measure %in% c("var_se", "var_scale_se"),
+                                 "Variance",
+                                 ifelse(measure %in% c("kurt_se", "kurt_scale_se"),
+                                        "Kurtosis",
+                                        ifelse(measure %in% c("CPC_se",
+                                                              "CPC_scale_se"),
+                                               "CPC", NA)))))
+
+#combine mean and standard error data frames
+
+nom <- cbind(nom_mean[,1:4], nom_se[,4], nom_mean[,c(5, 6)])
+np <- cbind(np_mean[,1:4], np_se[,4], np_mean[,c(5, 6)])
+
+#merge data frames back together, calculate 95% confidence intervals, and relevel faceting variables
 
 nom_polarization <- rbind(nom, np)
+
+nom_polarization <- mutate(nom_polarization,
+                           low = mean - qt(0.975, df = sets - 1)*se/sqrt(sets),
+                           hi = mean + qt(0.975, df = sets - 1)*se/sqrt(sets))
 
 nom_polarization$type <- factor(nom_polarization$type,
                                 levels = c("NOMINATE", "Nokken-Poole"))
 nom_polarization$measure <- factor(nom_polarization$measure,
-                                   levels = c("difference", "variance", "kurtosis",
+                                   levels = c("Difference", "Variance", "Kurtosis",
                                               "CPC"))
 
 #add labels to data frame
 
 nom_polarization$label <- NA
-nom_polarization$y <- 0.97 #0.86 for bidimensional
+nom_polarization$y <- 0.97
 
 nom_polarization$label[nom_polarization$chamber == "House of Representatives" &
                          nom_polarization$congress == 50] <- "Gilded\nAge"
@@ -322,7 +484,7 @@ nom_polarization$label[nom_polarization$chamber == "House of Representatives" &
 #plot unscaled CPC (Figure 5)
 
 ggplot(subset(nom_polarization, scaled == 0 & measure == "CPC"),
-       aes(x = congress, y = value, linetype = type)) +
+       aes(x = congress, y = mean, linetype = type)) +
   geom_rect(aes(xmin = 45, xmax = 56, ymin = -Inf, ymax = Inf), fill = "gray",
             alpha = 0.01) +
   geom_rect(aes(xmin = 73, xmax = 88, ymin = -Inf, ymax = Inf), fill = "gray",
@@ -331,14 +493,19 @@ ggplot(subset(nom_polarization, scaled == 0 & measure == "CPC"),
             alpha = 0.01) +
   geom_text(aes(y = y, label = label), size = 3) +
   geom_line() +
+  geom_ribbon(aes(ymin = low, ymax = hi), alpha = 0.3) +
   facet_wrap(~ chamber, ncol = 1) +
-  labs(x = "Congress", y = "CPC Estimate", linetype = "Ideology Estimate")
+  labs(x = "Congress", y = "CPC Estimate", linetype = "Ideology Estimate") +
+  theme(legend.position = c(0.21, 0.9),
+        legend.title = element_text(size = 10),
+        legend.text = element_text(size = 10))
 
 #plot scaled measures (Figure S13)
 
 ggplot(subset(nom_polarization, scaled == 1),
-       aes(x = congress, y = value, linetype = type)) +
+       aes(x = congress, y = mean, linetype = type)) +
   geom_line() +
+  geom_ribbon(aes(ymin = low, ymax = hi), alpha = 0.3) +
   facet_grid(measure ~ chamber) +
   labs(x = "Congress", y = "Polarization Estimates", linetype = "Ideology Estimate")
 
@@ -350,15 +517,15 @@ ggplot(subset(nom_polarization, scaled == 1),
 
 house_short <- dplyr::filter(house_polarization, congress %in% c(63:114)) %>%
   dplyr::select(1:5) %>%
-  dplyr::rename(difference = nom_diff, variance = nom_var, kurtosis = nom_kurt,
-                CPC = nom_CPC) %>%
+  dplyr::rename(Difference = nom_diff_mean, Variance = nom_var_mean,
+                Kurtosis = nom_kurt_mean, CPC = nom_CPC_mean) %>%
   inner_join(., inequality) %>%
   mutate(chamber = "House of Representatives")
 
 senate_short <- dplyr::filter(senate_polarization, congress %in% c(63:114)) %>%
   dplyr::select(1:5) %>%
-  dplyr::rename(difference = nom_diff, variance = nom_var, kurtosis = nom_kurt,
-                CPC = nom_CPC) %>%
+  dplyr::rename(Difference = nom_diff_mean, Variance = nom_var_mean,
+                Kurtosis = nom_kurt_mean, CPC = nom_CPC_mean) %>%
   inner_join(., inequality) %>%
   mutate(chamber = "Senate")
 
@@ -390,9 +557,9 @@ house_short <- mutate(house_short,
                                                         to = c(0, 1)),
                       `Top 1% wealth` = scales::rescale(`Top 1% wealth`,
                                                         to = c(0, 1)),
-                      difference = scales::rescale(difference, to = c(0, 1)),
-                      variance = scales::rescale(variance, to = c(0, 1)),
-                      kurtosis = scales::rescale(kurtosis, to = c(0, 1)),
+                      Difference = scales::rescale(Difference, to = c(0, 1)),
+                      Variance = scales::rescale(Variance, to = c(0, 1)),
+                      Kurtosis = scales::rescale(Kurtosis, to = c(0, 1)),
                       CPC = scales::rescale(CPC, to = c(0, 1))) %>%
   pivot_longer(cols = 2:5, names_to = "measure_polar",
                values_to = "value_polar") %>%
@@ -405,9 +572,9 @@ senate_short <- mutate(senate_short,
                                                          to = c(0, 1)),
                        `Top 1% wealth` = scales::rescale(`Top 1% wealth`,
                                                          to = c(0, 1)),
-                       difference = scales::rescale(difference, to = c(0, 1)),
-                       variance = scales::rescale(variance, to = c(0, 1)),
-                       kurtosis = scales::rescale(kurtosis, to = c(0, 1)),
+                       Difference = scales::rescale(Difference, to = c(0, 1)),
+                       Variance = scales::rescale(Variance, to = c(0, 1)),
+                       Kurtosis = scales::rescale(Kurtosis, to = c(0, 1)),
                        CPC = scales::rescale(CPC, to = c(0, 1))) %>%
   pivot_longer(cols = 2:5, names_to = "measure_polar",
                values_to = "value_polar") %>%
@@ -420,7 +587,7 @@ polar_short <- rbind(house_short, senate_short)
 #relevel polarization variable to get plots in correct order
 
 polar_short$measure_polar <- factor(polar_short$measure_polar,
-                                    levels = c("difference", "variance", "kurtosis",
+                                    levels = c("Difference", "Variance", "Kurtosis",
                                                "CPC"))
 polar_short$measure_ineq <- factor(polar_short$measure_ineq,
                                    levels = c("Gini coefficient", "Top 1% income",
@@ -428,8 +595,8 @@ polar_short$measure_ineq <- factor(polar_short$measure_ineq,
 
 #plot polarization and Gini coefficient (Figure S14)
 
-ggplot(subset(polar_short, measure_polar %in% c("difference", "variance",
-                                                "kurtosis", "CPC") &
+ggplot(subset(polar_short, measure_polar %in% c("Difference", "Variance",
+                                                "Kurtosis", "CPC") &
                 measure_ineq == "Gini coefficient" & !is.na(value_ineq)),
        aes(x = congress)) +
   geom_line(aes(y = value_polar, linetype = "Estimated polarization")) +
@@ -440,8 +607,8 @@ ggplot(subset(polar_short, measure_polar %in% c("difference", "variance",
 
 #plot polarization and top 1% income (Figure S15)
 
-ggplot(subset(polar_short, measure_polar %in% c("difference", "variance",
-                                                "kurtosis", "CPC") &
+ggplot(subset(polar_short, measure_polar %in% c("Difference", "Variance",
+                                                "Kurtosis", "CPC") &
                 measure_ineq == "Top 1% income" & !is.na(value_ineq)),
        aes(x = congress)) +
   geom_line(aes(y = value_polar, linetype = "Estimated polarization")) +
@@ -452,8 +619,8 @@ ggplot(subset(polar_short, measure_polar %in% c("difference", "variance",
 
 #plot polarization and top 1% wealth (Figure S16)
 
-ggplot(subset(polar_short, measure_polar %in% c("difference", "variance",
-                                                "kurtosis", "CPC") &
+ggplot(subset(polar_short, measure_polar %in% c("Difference", "Variance",
+                                                "Kurtosis", "CPC") &
                 measure_ineq == "Top 1% wealth" & !is.na(value_ineq)),
        aes(x = congress)) +
   geom_line(aes(y = value_polar, linetype = "Estimated polarization")) +
@@ -462,7 +629,7 @@ ggplot(subset(polar_short, measure_polar %in% c("difference", "variance",
   labs(x = "Congress", y = "Scaled Estimates of Polarization and Inequality",
        linetype = "Variable")
 
-#resent plot base size
+#reset plot base size
 
 theme_set(theme_bw(base_size = 22))
 
